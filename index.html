@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111313">
+  <title>VoiceFX · 语音效果器</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23d9fa79'/%3E%3Cpath d='M8 20h5l3-10 5 20 4-14 3 4h4' fill='none' stroke='%23111313' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./" aria-label="VoiceFX 首页"><span class="logo">∿</span> Voice<span>FX</span><small>语音效果器</small></a>
+    <div class="header-right"><span class="local"><i></i> 本地音频处理</span><span class="version">v0.1 / LAB</span></div>
+  </header>
+  <main>
+    <section class="intro">
+      <div><p class="eyebrow">VOICE PROCESSING STUDIO</p><h1>给声音，一点性格<span>。</span></h1><p class="subtitle">从低沉旁白到金属机器人，让 Agent 的声音有自己的表达。</p></div>
+      <button id="sdk-open" class="button subtle">接入 Agent <span>↗</span></button>
+    </section>
+    <div class="studio">
+      <aside>
+        <section class="panel source-panel">
+          <div class="section-title"><span class="step">01</span><h2>声音来源</h2></div>
+          <div class="tabs" role="tablist" aria-label="声音来源">
+            <button id="tab-file" role="tab" aria-selected="true">音频文件</button>
+            <button id="tab-mic" role="tab" aria-selected="false">麦克风</button>
+            <button id="tab-stream" role="tab" aria-selected="false">音频流</button>
+          </div>
+          <div id="file-source">
+            <label class="dropzone" id="dropzone" for="audio-file"><span class="upload-icon">↑</span><strong>放入一段声音</strong><span>拖入文件，或点击选择</span><small>WAV · MP3 · M4A · 浏览器可解码音频</small></label>
+            <input id="audio-file" type="file" accept="audio/*" class="visually-hidden">
+            <button id="demo" class="demo-button">∿ 试试合成元音 <span>8 秒</span></button>
+          </div>
+          <div id="mic-source" hidden><div class="source-note"><span class="large-icon">◉</span><strong>实时改变你的声音</strong><p>请戴耳机，避免扬声器回授。点击下方开始后授权麦克风。</p></div></div>
+          <div id="stream-source" hidden><div class="source-note"><span class="large-icon">⌁</span><strong>Agent 音频流入口</strong><p>测试流将以 24 kHz PCM 分包输入。你的 Agent 可通过 SDK 接入同一条效果链。</p></div><button id="stream-demo" class="demo-button">播放 PCM 测试流 <span>8 秒</span></button></div>
+          <div class="file-info" id="file-info"><i></i><span id="source-name">等待声音输入</span><small id="source-detail">—</small></div>
+        </section>
+        <section class="panel presets-panel">
+          <div class="section-title"><span class="step">02</span><h2>音色预设</h2><span class="muted tiny">点击即应用</span></div>
+          <div id="presets" class="presets"></div>
+          <div class="preset-actions"><button id="save-preset">＋ 保存当前音色</button><button id="reset">恢复初始</button></div>
+          <div id="saved-presets"></div>
+        </section>
+        <div class="footnote"><span>↳</span><p>效果在本机运行。导入的声音不上传。<br>音色塑形用于改变质感，不涉及声音克隆。</p></div>
+      </aside>
+      <div class="workspace">
+        <section class="panel monitor-panel">
+          <div class="monitor-top"><div class="section-title"><span class="step">03</span><h2>声音监测</h2></div><div class="status"><i id="status-led"></i><span id="status">待机</span></div></div>
+          <div class="wave-area"><canvas id="wave" aria-label="输出声音波形"></canvas><div class="wave-label"><span>OUTPUT WAVEFORM</span><span id="db">−∞ dBFS</span></div></div>
+          <div class="transport">
+            <button id="play" class="play-button" disabled><span id="play-icon">▶</span><span id="play-label">开始试听</span></button>
+            <button id="stop" class="icon-button" aria-label="停止播放" disabled>■</button>
+            <div class="time"><span id="elapsed">00:00</span><span>/</span><span id="duration">00:00</span></div>
+            <div class="transport-right"><button id="bypass" class="button subtle" aria-pressed="false">A/B 原声</button><button id="export" class="button export" disabled>导出 WAV <span>↓</span></button></div>
+          </div>
+          <div id="message" role="status" aria-live="polite">载入一段语音，再选择预设或调整参数。</div>
+        </section>
+        <section class="panel rack-panel">
+          <div class="rack-heading"><div class="section-title"><span class="step">04</span><h2>效果链</h2></div><span class="active-preset" id="active-preset">原声 / INIT</span></div>
+          <div class="chain"><span>输入</span><i>→</i><span>音高</span><i>→</i><span>音色 / 滤波</span><i>→</i><span>质感</span><i>→</i><span>输出</span></div>
+          <div id="controls" class="controls"></div>
+          <div class="rack-bottom"><span><i></i> AudioWorklet 实时处理</span><span id="latency">等待音频引擎</span></div>
+        </section>
+      </div>
+    </div>
+    <footer><span>VOICEFX / 一个声音的实验室</span><span>试听原型 · 参数可保存 · 支持 PCM SDK</span></footer>
+  </main>
+  <dialog id="sdk-dialog">
+    <div class="dialog-top"><span class="eyebrow">CONNECT YOUR AGENT</span><button id="sdk-close" class="icon-button" aria-label="关闭接入说明">×</button></div>
+    <h2>接在声音输出与播放之间。</h2>
+    <p>适用于你能访问音频数据的 Agent。先在服务端完成豆包或其他语音 API 的认证，再把解码后的 PCM 传给前端效果器。</p>
+    <div class="sdk-flow"><span>Agent / TTS</span><i>→</i><span>PCM 音频</span><i>→</i><b>VoiceFX</b><i>→</i><span>扬声器</span></div>
+    <pre><code>import { VoiceFX } from './voicefx.js';
+
+// 由用户点击触发，再启动 AudioContext
+const context = new AudioContext();
+await context.resume();
+const fx = await VoiceFX.create(context, {
+  pitch: -5, metal: 0.6, drive: 0.25
+});
+fx.connect(context.destination);
+const stream = await fx.createPCMStream({
+  sampleRate: 24000, format: 's16le'
+});
+
+// 每个音频包：单声道、有符号 16 位、小端 PCM
+stream.enqueue(pcmArrayBuffer);
+// 上游本轮语音结束
+stream.end();
+// 打断 / 取消当前回复
+// stream.cancel();</code></pre>
+    <div class="sdk-note"><strong>当前版本的接入边界</strong><p>支持单声道 s16le / Float32 PCM，也可把已有 Web Audio 节点连接至 fx.input。麦克风和实时流保持 1× 速度；文件可独立调整音高与速度。声线控制采用频谱塑形，不是共振峰保持或换人。豆包现成 App 的系统音频、AU / VST3 和虚拟声卡尚未实现。</p></div>
+    <button id="copy-sdk" class="button primary">复制接入示例</button>
+  </dialog>
+</body>
+</html>
